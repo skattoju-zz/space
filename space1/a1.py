@@ -1,0 +1,98 @@
+#Real-Time Simulation
+#Write a program that simulates events occurring in real or accelerated time, including the following
+#requirements:
+
+#-The simulation can be initialized to any start time in the format year, month, day, hour,
+ #minute, second, sub-second.
+#-Logs the simulated time to a file every 1 minute.
+#-Every 5 minutes a random number is generated and stored with a time stamp.
+#-Every 90 minutes, a checksum is calculated on the sequence of random numbers.
+#-Twice a day (at times read from a file) the sequence of random numbers is saved to a file.
+
+#In other words, we want to be able to run the program quickly where 1 minute of simulation time takes
+#a fraction of a second to complete, as well as run the simulation time with 1 minute of simulation
+#equals 1 minute of real time.
+
+#This programing will require you to become familiar with the following features of the programming
+#language of your choice reading the system time, file input/output, random number generation. As
+#well as learning to manage the execution speed of the simulation and schedule time based events.
+
+#test as you fly.
+
+#define a time struct.
+
+#define timed events
+#sim start time
+#sim stop time
+#dowlink times
+#other timed events
+
+#main loop
+#update time
+#do events
+    
+import time
+import pickle
+from Jobs import Jobs
+
+# simulation time
+# TODO get this from a GUI
+# time.mktime(9-item-sequence) --> converts to float seconds since epoch (time.gmtime(0))
+simulation_start = time.mktime([1970, 1, 1, 2, 30, 1, 3, 1, 0])
+simulation_stop = time.mktime([1970, 1, 1, 12, 30, 1, 3, 1, 0])
+time_step = 10
+
+# downlink times
+# TODO compute these using propagator
+# TODO model as periodic function
+# TODO read from file
+# sanity check to ensure downlink times are after simulation start and before simulation_stop
+
+downlink_time_list = list()
+fh = open('downlink_times.dat', 'r')
+for line in fh:
+  #print map(int ,line.rstrip().split(','))
+  downlink_time_list.append(map(int ,line.rstrip().split(',')))
+fh.close()
+
+# TODO compute event times
+# TODO periodic events
+# TODO read events from file
+
+JobList = list()
+i = 0
+for downlink_time in downlink_time_list:
+  print downlink_time
+  JobList.append(Jobs(i,time.mktime(downlink_time),5,0,0,1))
+  i = i+1
+  
+#start simulation
+current_time = simulation_start
+
+# realtime
+# time.time() --> returns float seconds since epoch (time.gmtime(0))
+# TODO update GUI
+current_real_time = time.localtime(time.time())
+current_sim_time = time.localtime(current_time)
+
+
+while(current_time < simulation_stop):
+  # update time
+  current_time = current_time + time_step
+  #print time.asctime(time.localtime(current_time))
+  # TODO compute things
+  # execute active events
+  for Job in JobList:
+    if Job.enabled == 1 and Job.sched_time - current_time <= 1:
+      print time.asctime(time.localtime(current_time))
+      Job.execute(current_time)
+      Job.repeat = Job.repeat-1
+      # deactivate events if complete
+      if(Job.repeat == -1):
+	Job.enabled = 0
+      else:
+	Job.sched_time = Job.sched_time + Job.period
+	
+  # update GUI
+ 
+#spacecraft data store
